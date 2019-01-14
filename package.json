@@ -1,0 +1,26 @@
+{
+  "name": "srqranchbackend",
+  "version": "1.0.0",
+  "description": "backend for ranch",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "mongoose": "^5.4.3",
+    "morgan": "^1.9.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cmoler/srqRanchBackend.git"
+  },
+  "author": "cmoler",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cmoler/srqRanchBackend/issues"
+  },
+  "homepage": "https://github.com/cmoler/srqRanchBackend#readme"
+}
