@@ -31,8 +31,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(logger("dev"));
 
-router.post("/reserveNow", async (req) => {
-    const {name, email, dates, message} = req.body;
+const asyncMiddleware = fn =>
+    (req, res, next) => {
+        Promise.resolve(fn(req, res, next))
+            .catch(next);
+    };
+
+router.post("/reserveNow", asyncMiddleware(async (req) => {
+    const {name, email, message, startDate, endDate} = req.body;
 
     let account = await nodemailer.createTestAccount();
 
@@ -52,9 +58,11 @@ router.post("/reserveNow", async (req) => {
         from: name+" "+email, // sender address
         to: "bar@example.com", // list of receivers
         subject: "ReservationRequest"+email, // Subject line
-        text: dates+" "+message, // plain text body
+        text: startDate+" "+endDate+" "+message, // plain text body
         html: "" // html body
     };
+
+    console.log(mailOptions);
 
     // send mail with defined transport object
     let info = await transporter.sendMail(mailOptions);
@@ -62,9 +70,9 @@ router.post("/reserveNow", async (req) => {
     console.log("Message sent: %s", info.messageId);
     // Preview only available when sending through an Ethereal account
     console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-});
+}));
 
-router.post("/contactUs", async (req) => {
+router.post("/contactUs", asyncMiddleware(async (req) => {
     const {name, email, subject, message} = req.body;
 
     let account = await nodemailer.createTestAccount();
@@ -89,13 +97,16 @@ router.post("/contactUs", async (req) => {
         html: "" // html body
     };
 
+    console.log("Before sending message");
+    console.log(mailOptions);
+
     // send mail with defined transport object
     let info = await transporter.sendMail(mailOptions);
 
     console.log("Message sent: %s", info.messageId);
     // Preview only available when sending through an Ethereal account
     console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-});
+}));
 
 // append /api for our http requests
 app.use("/api", router);
