@@ -3,13 +3,14 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const logger = require("morgan");
 const Data = require("./src/data");
+const nodemailer = require("nodemailer");
 
 const API_PORT = 3001;
 const app = express();
 const router = express.Router();
 
 // this is our MongoDB database
-const dbRoute = "mongodb://cmoler:!@ds153745.mlab.com:53745/srqranch";
+const dbRoute = "mongodb://srq:Sensei1996@ds153745.mlab.com:53745/srqranch";
 
 // connects our back end code with the database
 mongoose.connect(
@@ -30,54 +31,70 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(logger("dev"));
 
-// this is our get method
-// this method fetches all available data in our database
-router.get("/getData", (req, res) => {
-    Data.find((err, data) => {
-        if (err) return res.json({ success: false, error: err });
-        return res.json({ success: true, data: data });
+router.post("/reserveNow", async (req) => {
+    const {name, email, dates, message} = req.body;
+
+    let account = await nodemailer.createTestAccount();
+
+    // create reusable transporter object using the default SMTP transport
+    let transporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+            user: account.user, // generated ethereal user
+            pass: account.pass // generated ethereal password
+        }
     });
+
+    // setup email data with unicode symbols
+    let mailOptions = {
+        from: name+" "+email, // sender address
+        to: "bar@example.com", // list of receivers
+        subject: "ReservationRequest"+email, // Subject line
+        text: dates+" "+message, // plain text body
+        html: "" // html body
+    };
+
+    // send mail with defined transport object
+    let info = await transporter.sendMail(mailOptions);
+
+    console.log("Message sent: %s", info.messageId);
+    // Preview only available when sending through an Ethereal account
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 });
 
-// this is our update method
-// this method overwrites existing data in our database
-router.post("/updateData", (req, res) => {
-    const { id, update } = req.body;
-    Data.findOneAndUpdate(id, update, err => {
-        if (err) return res.json({ success: false, error: err });
-        return res.json({ success: true });
+router.post("/contactUs", async (req) => {
+    const {name, email, subject, message} = req.body;
+
+    let account = await nodemailer.createTestAccount();
+
+    // create reusable transporter object using the default SMTP transport
+    let transporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+            user: account.user, // generated ethereal user
+            pass: account.pass // generated ethereal password
+        }
     });
-});
 
-// this is our delete method
-// this method removes existing data in our database
-router.delete("/deleteData", (req, res) => {
-    const { id } = req.body;
-    Data.findOneAndDelete(id, err => {
-        if (err) return res.send(err);
-        return res.json({ success: true });
-    });
-});
+    // setup email data with unicode symbols
+    let mailOptions = {
+        from: name+" "+email, // sender address
+        to: "bar@example.com", // list of receivers
+        subject: subject, // Subject line
+        text: message, // plain text body
+        html: "" // html body
+    };
 
-// this is our create methid
-// this method adds new data in our database
-router.post("/putData", (req, res) => {
-    let data = new Data();
+    // send mail with defined transport object
+    let info = await transporter.sendMail(mailOptions);
 
-    const { id, message } = req.body;
-
-    if ((!id && id !== 0) || !message) {
-        return res.json({
-            success: false,
-            error: "INVALID INPUTS"
-        });
-    }
-    data.message = message;
-    data.id = id;
-    data.save(err => {
-        if (err) return res.json({ success: false, error: err });
-        return res.json({ success: true });
-    });
+    console.log("Message sent: %s", info.messageId);
+    // Preview only available when sending through an Ethereal account
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 });
 
 // append /api for our http requests
